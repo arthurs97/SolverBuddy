@@ -1,8 +1,8 @@
 import unittest
 import numpy as np
 
-from rlcard.games.mahjong.game import MahjongGame as Game
-from rlcard.games.mahjong.player import MahjongPlayer as Player
+from rlcard_fork.games.mahjong.game import MahjongGame as Game
+from rlcard_fork.games.mahjong.player import MahjongPlayer as Player
 
 class TestMahjongMethods(unittest.TestCase):
 

@@ -1,8 +1,8 @@
 import unittest
 import numpy as np
 
-from rlcard.games.limitholdem.game import LimitHoldemGame as Game
-from rlcard.games.limitholdem.player import LimitHoldemPlayer as Player
+from rlcard_fork.games.limitholdem.game import LimitHoldemGame as Game
+from rlcard_fork.games.limitholdem.player import LimitHoldemPlayer as Player
 
 
 class TestLimitHoldemMethods(unittest.TestCase):

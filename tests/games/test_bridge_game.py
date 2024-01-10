@@ -7,12 +7,12 @@
 import unittest
 import numpy as np
 
-from rlcard.games.bridge.game import BridgeGame as Game
-from rlcard.games.bridge.dealer import BridgeDealer
-from rlcard.games.bridge.player import BridgePlayer
-from rlcard.games.bridge.utils.action_event import PassAction
-from rlcard.games.bridge.utils.bridge_card import BridgeCard
-from rlcard.games.bridge.utils.move import DealHandMove
+from rlcard_fork.games.bridge.game import BridgeGame as Game
+from rlcard_fork.games.bridge.dealer import BridgeDealer
+from rlcard_fork.games.bridge.player import BridgePlayer
+from rlcard_fork.games.bridge.utils.action_event import PassAction
+from rlcard_fork.games.bridge.utils.bridge_card import BridgeCard
+from rlcard_fork.games.bridge.utils.move import DealHandMove
 
 
 class TestBridgeGame(unittest.TestCase):

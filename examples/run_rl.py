@@ -5,9 +5,9 @@ import argparse
 
 import torch
 
-import rlcard
-from rlcard.agents import RandomAgent
-from rlcard.utils import (
+import rlcard_fork
+from rlcard_fork.agents import RandomAgent
+from rlcard_fork.utils import (
     get_device,
     set_seed,
     tournament,
@@ -25,7 +25,7 @@ def train(args):
     set_seed(args.seed)
 
     # Make the environment with seed
-    env = rlcard.make(
+    env = rlcard_fork.make(
         args.env,
         config={
             'seed': args.seed,
@@ -34,7 +34,7 @@ def train(args):
 
     # Initialize the agent and use random agents as opponents
     if args.algorithm == 'dqn':
-        from rlcard.agents import DQNAgent
+        from rlcard_fork.agents import DQNAgent
         if args.load_checkpoint_path != "":
             agent = DQNAgent.from_checkpoint(checkpoint=torch.load(args.load_checkpoint_path))
         else:
@@ -48,7 +48,7 @@ def train(args):
             )
 
     elif args.algorithm == 'nfsp':
-        from rlcard.agents import NFSPAgent
+        from rlcard_fork.agents import NFSPAgent
         if args.load_checkpoint_path != "":
             agent = NFSPAgent.from_checkpoint(checkpoint=torch.load(args.load_checkpoint_path))
         else:

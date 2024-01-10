@@ -1,8 +1,8 @@
 import unittest
 import numpy as np
 
-from rlcard.games.blackjack.game import BlackjackGame as Game
-from rlcard.envs.blackjack import DEFAULT_GAME_CONFIG
+from rlcard_fork.games.blackjack.game import BlackjackGame as Game
+from rlcard_fork.envs.blackjack import DEFAULT_GAME_CONFIG
 
 class TestBlackjackGame(unittest.TestCase):
 

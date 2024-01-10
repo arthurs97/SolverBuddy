@@ -3,13 +3,13 @@
 import argparse
 import pprint
 
-import rlcard
-from rlcard.agents import RandomAgent
-from rlcard.utils import set_seed
+import rlcard_fork
+from rlcard_fork.agents import RandomAgent
+from rlcard_fork.utils import set_seed
 
 def run(args):
     # Make environment
-    env = rlcard.make(
+    env = rlcard_fork.make(
         args.env,
         config={
             'seed': 42,

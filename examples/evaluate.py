@@ -3,12 +3,12 @@
 import os
 import argparse
 
-import rlcard
-from rlcard.agents import (
+import rlcard_fork
+from rlcard_fork.agents import (
     DQNAgent,
     RandomAgent,
 )
-from rlcard.utils import (
+from rlcard_fork.utils import (
     get_device,
     set_seed,
     tournament,
@@ -20,14 +20,14 @@ def load_model(model_path, env=None, position=None, device=None):
         agent = torch.load(model_path, map_location=device)
         agent.set_device(device)
     elif os.path.isdir(model_path):  # CFR model
-        from rlcard.agents import CFRAgent
+        from rlcard_fork.agents import CFRAgent
         agent = CFRAgent(env, model_path)
         agent.load()
     elif model_path == 'random':  # Random model
-        from rlcard.agents import RandomAgent
+        from rlcard_fork.agents import RandomAgent
         agent = RandomAgent(num_actions=env.num_actions)
     else:  # A model in the model zoo
-        from rlcard import models
+        from rlcard_fork import models
         agent = models.load(model_path).agents[position]
     
     return agent
@@ -41,7 +41,7 @@ def evaluate(args):
     set_seed(args.seed)
 
     # Make the environment with seed
-    env = rlcard.make(args.env, config={'seed': args.seed})
+    env = rlcard_fork.make(args.env, config={'seed': args.seed})
 
     # Load models
     agents = []

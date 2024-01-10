@@ -5,13 +5,13 @@ import argparse
 
 import torch
 
-import rlcard
-from rlcard.agents.dmc_agent import DMCTrainer
+import rlcard_fork
+from rlcard_fork.agents.dmc_agent import DMCTrainer
 
 def train(args):
 
     # Make the environment
-    env = rlcard.make(args.env)
+    env = rlcard_fork.make(args.env)
 
     # Initialize the DMC trainer
     trainer = DMCTrainer(

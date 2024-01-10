@@ -3,12 +3,12 @@
 import os
 import argparse
 
-import rlcard
-from rlcard.agents import (
+import rlcard_fork
+from rlcard_fork.agents import (
     CFRAgent,
     RandomAgent,
 )
-from rlcard.utils import (
+from rlcard_fork.utils import (
     set_seed,
     tournament,
     Logger,
@@ -17,14 +17,14 @@ from rlcard.utils import (
 
 def train(args):
     # Make environments, CFR only supports Leduc Holdem
-    env = rlcard.make(
+    env = rlcard_fork.make(
         'leduc-holdem',
         config={
             'seed': 0,
             'allow_step_back': True,
         }
     )
-    eval_env = rlcard.make(
+    eval_env = rlcard_fork.make(
         'leduc-holdem',
         config={
             'seed': 0,

@@ -1,11 +1,11 @@
 import unittest
 
-from rlcard.games.limitholdem.player import PlayerStatus
-from rlcard.games.nolimitholdem.game import NolimitholdemGame as Game, Stage
+from rlcard_fork.games.limitholdem.player import PlayerStatus
+from rlcard_fork.games.nolimitholdem.game import NolimitholdemGame as Game, Stage
 import numpy as np
-from rlcard.utils import seeding
+from rlcard_fork.utils import seeding
 
-from rlcard.games.nolimitholdem.round import Action
+from rlcard_fork.games.nolimitholdem.round import Action
 
 
 class TestNolimitholdemMethods(unittest.TestCase):

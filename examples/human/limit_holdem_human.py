@@ -1,13 +1,13 @@
 ''' A toy example of playing against a random agent on Limit Hold'em
 '''
 
-import rlcard
-from rlcard.agents import LimitholdemHumanAgent as HumanAgent
-from rlcard.agents import RandomAgent
-from rlcard.utils.utils import print_card
+import rlcard_fork
+from rlcard_fork.agents import LimitholdemHumanAgent as HumanAgent
+from rlcard_fork.agents import RandomAgent
+from rlcard_fork.utils.utils import print_card
 
 # Make environment
-env = rlcard.make('limit-holdem')
+env = rlcard_fork.make('limit-holdem')
 human_agent = HumanAgent(env.num_actions)
 agent_0 = RandomAgent(num_actions=env.num_actions)
 env.set_agents([

@@ -12,8 +12,8 @@ from pettingzoo.classic import (
     texas_holdem_no_limit_v6,
     gin_rummy_v4,
 )
-from rlcard.agents.pettingzoo_agents import RandomAgentPettingZoo
-from rlcard.utils import (
+from rlcard_fork.agents.pettingzoo_agents import RandomAgentPettingZoo
+from rlcard_fork.utils import (
     get_device,
     set_seed,
     Logger,
@@ -47,7 +47,7 @@ def train(args):
     # Initialize the agent and use random agents as opponents
     learning_agent_name = env.agents[0]
     if args.algorithm == 'dqn':
-        from rlcard.agents.pettingzoo_agents import DQNAgentPettingZoo
+        from rlcard_fork.agents.pettingzoo_agents import DQNAgentPettingZoo
         agent = DQNAgentPettingZoo(
             num_actions=env.action_space(learning_agent_name).n,
             state_shape=env.observation_space(learning_agent_name)["observation"].shape,
@@ -55,7 +55,7 @@ def train(args):
             device=device
         )
     elif args.algorithm == 'nfsp':
-        from rlcard.agents.pettingzoo_agents import NFSPAgentPettingZoo
+        from rlcard_fork.agents.pettingzoo_agents import NFSPAgentPettingZoo
         agent = NFSPAgentPettingZoo(
             num_actions=env.action_space(learning_agent_name).n,
             state_shape=env.observation_space(learning_agent_name)["observation"].shape,

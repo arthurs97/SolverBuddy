@@ -1,8 +1,8 @@
 import unittest
 import numpy as np
-from rlcard.utils.utils import init_54_deck, init_standard_deck, rank2int, print_card, elegent_form, reorganize, tournament
-import rlcard
-from rlcard.agents.random_agent import RandomAgent
+from rlcard_fork.utils.utils import init_54_deck, init_standard_deck, rank2int, print_card, elegent_form, reorganize, tournament
+import rlcard_fork
+from rlcard_fork.agents.random_agent import RandomAgent
 
 class TestUtils(unittest.TestCase):
 
@@ -38,7 +38,7 @@ class TestUtils(unittest.TestCase):
         self.assertEqual(len(trajectories[0][0]), 5)
 
     def test_tournament(self):
-        env = rlcard.make('leduc-holdem')
+        env = rlcard_fork.make('leduc-holdem')
         env.set_agents([RandomAgent(env.num_actions), RandomAgent(env.num_actions)])
         payoffs = tournament(env,1000)
         self.assertEqual(len(payoffs), 2)

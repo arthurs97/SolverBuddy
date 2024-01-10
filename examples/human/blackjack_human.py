@@ -1,14 +1,14 @@
 ''' A toy example of self playing for Blackjack
 '''
 
-import rlcard
-from rlcard.agents import RandomAgent as RandomAgent
-from rlcard.agents import BlackjackHumanAgent as HumanAgent
-from rlcard.utils.utils import print_card
+import rlcard_fork
+from rlcard_fork.agents import RandomAgent as RandomAgent
+from rlcard_fork.agents import BlackjackHumanAgent as HumanAgent
+from rlcard_fork.utils.utils import print_card
 
 # Make environment
 num_players = 2
-env = rlcard.make(
+env = rlcard_fork.make(
     'blackjack',
     config={
         'game_num_players': num_players,
