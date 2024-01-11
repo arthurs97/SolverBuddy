@@ -6,17 +6,50 @@ from rlcard_fork.games.limitholdem import PlayerStatus
 
 
 class Action(Enum):
+    '''
+    Enum representing the actions players can take
+    '''
     FOLD = 0
     CHECK = 1
     CALL = 2
-    BET = 3,
+    BET = 3
     RAISE = 4
+
+    @staticmethod
+    def parse(action_str, sh_map=None):
+        '''
+        Parse an action string into an Action enum
+        '''
+        if sh_map is None:
+            sh_map = {
+                "F": Action.FOLD,
+                "X": Action.CHECK,
+                "C": Action.CALL,
+                "B": Action.BET,
+                "R": Action.RAISE
+            }
+        return Action[action_str.upper()] if len(action_str) > 1 \
+            else sh_map[action_str.upper()]
+
+    def shorthand(self, action_map=None):
+        '''
+        Get the shorthand representation of this action
+        '''
+        if action_map is None:
+            action_map = {
+                Action.FOLD: "F",
+                Action.CHECK: "X",
+                Action.CALL: "C",
+                Action.BET: "B",
+                Action.RAISE: "R"
+            }
+        return action_map[self]
 
 
 class NolimitholdemRound:
     """Round can call functions from other classes to keep the game running"""
 
-    def __init__(self, num_players, init_raise_amount, dealer, np_random):
+    def __init__(self, game, init_raise_amount, np_random):
         """
         Initialize the round class
 
@@ -26,10 +59,9 @@ class NolimitholdemRound:
         """
         self.np_random = np_random
         self.game_pointer = None
-        self.num_players = num_players
+        self.game = game
+        self.num_players = game.num_players
         self.init_raise_amount = init_raise_amount
-
-        self.dealer = dealer
 
         # Count the number without raise
         # If every player agree to not raise, the round is over
@@ -58,7 +90,7 @@ class NolimitholdemRound:
         else:
             self.raised = [0 for _ in range(self.num_players)]
 
-    def validate_bet_size(size: int):
+    def validate_bet_size(self, size: int):
         """
         Check whether the bet size is legal
 
@@ -93,27 +125,24 @@ class NolimitholdemRound:
             player.bet(chips=diff)
             self.not_raise_num += 1
 
-        elif action == Action.BET or action == Action.RAISE:
+        elif action in (Action.BET, Action.RAISE):
             self.raised[self.game_pointer] += size
             player.bet(chips=size)
             self.not_raise_num = 1
 
         elif action == Action.FOLD:
             player.status = PlayerStatus.FOLDED
+            self.not_playing_num += 1
 
         if player.remained_chips < 0:
             raise Exception("Player in negative stake")
 
         if player.remained_chips == 0 and player.status != PlayerStatus.FOLDED:
             player.status = PlayerStatus.ALLIN
-
-        self.game_pointer = (self.game_pointer + 1) % self.num_players
-
-        if player.status == PlayerStatus.ALLIN:
             self.not_playing_num += 1
             self.not_raise_num -= 1  # Because already counted in not_playing_num
-        if player.status == PlayerStatus.FOLDED:
-            self.not_playing_num += 1
+
+        self.game_pointer = (self.game_pointer + 1) % self.num_players
 
         # Skip the folded players
         while players[self.game_pointer].status == PlayerStatus.FOLDED:
@@ -131,34 +160,19 @@ class NolimitholdemRound:
         Returns:
            (list):  A list of legal actions
         """
-
-        full_actions = list(Action)
-
-        # The player can always check or call
         player = players[self.game_pointer]
-
-        diff = max(self.raised) - self.raised[self.game_pointer]
-        # If the current player has no more chips after call, we cannot raise
-        if diff > 0 and diff >= player.remained_chips:
-            full_actions.remove(Action.RAISE_HALF_POT)
-            full_actions.remove(Action.RAISE_POT)
-            full_actions.remove(Action.ALL_IN)
-        # Even if we can raise, we have to check remained chips
+        # folding is always allowed
+        allowed_actions = [Action.FOLD]
+        # checking, initial betting are only allowed if there is no bet so far
+        if max(self.raised) == 0:
+            allowed_actions.append(Action.CHECK)
+            allowed_actions.append(Action.BET)
         else:
-            if self.dealer.pot > player.remained_chips:
-                full_actions.remove(Action.RAISE_POT)
+            # if already facing a live bet, calling is always allowed
+            allowed_actions.append(Action.CALL)
+            allowed_actions.append(Action.RAISE)
 
-            if int(self.dealer.pot / 2) > player.remained_chips:
-                full_actions.remove(Action.RAISE_HALF_POT)
-
-            # Can't raise if the total raise amount is leq than the max raise amount of this round
-            # If raise by pot, there is no such concern
-            if Action.RAISE_HALF_POT in full_actions and \
-                int(self.dealer.pot / 2) + self.raised[self.game_pointer] <= max(self.raised):
-                full_actions.remove(Action.RAISE_HALF_POT)
-
-        return full_actions
-
+        return allowed_actions
     def is_over(self):
         """
         Check whether the round is over
@@ -166,6 +180,8 @@ class NolimitholdemRound:
         Returns:
             (boolean): True if the current round is over
         """
-        if self.not_raise_num + self.not_playing_num >= self.num_players:
-            return True
-        return False
+        print("is_over()")
+        print(f"not_raise_num: {self.not_raise_num}")
+        print(f"not_playing_num: {self.not_playing_num}")
+        print([p.status for p in self.game.players])           
+        return self.not_raise_num + self.not_playing_num == self.num_players

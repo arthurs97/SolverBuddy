@@ -6,15 +6,18 @@ from rlcard_fork.games.limitholdem import Game
 from rlcard_fork.games.limitholdem import PlayerStatus
 
 from rlcard_fork.games.base import Card
-from rlcard_fork.games.nolimitholdem import Dealer
 from rlcard_fork.games.nolimitholdem import Player
 from rlcard_fork.games.nolimitholdem import Judger
 from rlcard_fork.games.nolimitholdem import Round, Action
+from rlcard_fork.games.nolimitholdem.player import Position
 from rlcard_fork.utils.utils import init_standard_deck
 import json
 
 
-class Stage(Enum):
+class Street(Enum):
+    """
+    Enum representing the streets of a No Limit Texas Hold'em game.
+    """
     PREFLOP = 0
     FLOP = 1
     TURN = 2
@@ -22,74 +25,9 @@ class Stage(Enum):
     END_HIDDEN = 4
     SHOWDOWN = 5
 
-class Position(Enum):
-    SB = 0
-    BB = 1
-    UTG = 2
-    UTG1 = 3
-    MP = 4
-    MP1 = 5
-    HJ = 6
-    CO = 7
-    BTN = 8
-    
-    def __str__(self):
-        return self.name
-    
-    @staticmethod
-    def from_value(val):
-        if val == 0:
-            return Position.SB
-        elif val == 1:
-            return Position.BB
-        elif val == 2:
-            return Position.UTG
-        elif val == 3:
-            return Position.UTG1
-        elif val == 4:
-            return Position.MP
-        elif val == 5:
-            return Position.MP1
-        elif val == 6:
-            return Position.HJ
-        elif val == 7:
-            return Position.CO
-        elif val == 8:
-            return Position.BTN
-        else:
-            raise ValueError(f"Invalid position value: {val}")
-    
-    def next(self, num_players):
-        positions = Position.positions(num_players)
-        return positions[(positions.index(self) + 1) % len(positions)]
-
-    @staticmethod
-    def explanation_string(num_players):
-        return','.join([str(p) for p in Position.positions(num_players)])
-    
-    @staticmethod
-    def positions(num_players):
-        if num_players == 2:
-            return [Position.BB, Position.BTN]
-        elif num_players == 3:
-            return [Position.SB, Position.BB, Position.BTN]
-        elif num_players == 4:
-            return [Position.SB, Position.BB, Position.UTG, Position.BTN]
-        elif num_players == 5:
-            return [Position.SB, Position.BB, Position.UTG, Position.CO, Position.BTN]
-        elif num_players == 6:
-            return [Position.SB, Position.BB, Position.UTG, Position.HJ, Position.CO, Position.BTN]
-        elif num_players == 7:
-            return [Position.SB, Position.BB, Position.UTG, Position.MP, Position.HJ, Position.CO, Position.BTN]
-        elif num_players == 8:
-            return [Position.SB, Position.BB, Position.UTG, Position.UTG1, Position.MP, Position.HJ, Position.CO, Position.BTN]
-        elif num_players == 9:
-            return [Position.SB, Position.BB, Position.UTG, Position.UTG1, Position.MP, Position.MP1, Position.HJ, Position.CO, Position.BTN]
-
-
 class NolimitholdemGame(Game):
     def __init__(
-            self, 
+            self,
             small_blind=1,
             big_blind=2,
             effective_stack=100, 
@@ -108,12 +46,22 @@ class NolimitholdemGame(Game):
         # config players
         self.init_chips = [effective_stack] * num_players
 
-        # If None, the dealer will be randomly chosen
-        self.dealer_id = None
-
+        self.pot = 0
         self.effective_stack = 0
         self.hero_position = hero_position
+        self.hero_index = Position.positions(num_players).index(hero_position)
         self.deck = init_standard_deck()
+
+        # Initialize players to play the game
+        positions = Position.positions(self.num_players)
+        self.players = [Player(i, positions[i], self.init_chips[i], self.np_random) for i in range(self.num_players)]
+
+        # Initialize a judger class which will decide who wins in the end
+        self.judger = Judger(self.np_random)
+
+        # Initialize public cards
+        self.public_cards = []
+        self.street = Street.PREFLOP
 
     def configure(self, game_config):
         """
@@ -123,7 +71,6 @@ class NolimitholdemGame(Game):
         self.num_players = game_config['game_num_players']
         # must have num_players length
         self.init_chips = [game_config['chips_for_each']] * game_config["game_num_players"]
-        self.dealer_id = game_config['dealer_id']
 
     def init_game(self):
         """
@@ -137,18 +84,6 @@ class NolimitholdemGame(Game):
                 (dict): The first state of the game
                 (int): Current player's id
         """
-
-        # Initialize players to play the game
-        positions = Position.positions(self.num_players)
-        self.players = [Player(i, positions[i], self.init_chips[i], self.np_random) for i in range(self.num_players)]
-
-        # Initialize a judger class which will decide who wins in the end
-        self.judger = Judger(self.np_random)
-
-        # Initialize public cards
-        self.public_cards = []
-        self.stage = Stage.PREFLOP
-
         # Big blind and small blind
         # s = (self.dealer_id + 1) % self.num_players
         # b = (self.dealer_id + 2) % self.num_players
@@ -157,15 +92,13 @@ class NolimitholdemGame(Game):
         sb.bet(chips=self.small_blind)
         bb.bet(chips=self.big_blind)
         
-
         # the game pointer is the index of the `players` list who is next to act
         # in HU, the pointer starts on 1 (BTN). On all other modes, the pointer starts on 2 (first player after BB)
         self.game_pointer: int = 1 if self.num_players == 2 else 2
         
-
         # Initialize a bidding round, in the first round, the big blind and the small blind needs to
         # be passed to the round for processing.
-        self.round = Round(self.num_players, self.big_blind, dealer=self.dealer, np_random=self.np_random)
+        self.round = Round(self, self.big_blind, np_random=self.np_random)
 
         self.round.start_new_round(game_pointer=self.game_pointer, raised=[p.in_chips for p in self.players])
 
@@ -178,10 +111,13 @@ class NolimitholdemGame(Game):
         state = self.get_state(self.game_pointer)
 
         return state, self.game_pointer
-    
+ 
     def hero(self):
-        return self.players[self.hero_position.value]
-    
+        '''
+        Return the hero player
+        '''
+        return self.players[self.hero_index]
+
     def get_legal_actions(self):
         """
         Return the legal actions for current player
@@ -260,7 +196,7 @@ class NolimitholdemGame(Game):
             '''
 
             self.round_counter += 1
-            self.round.start_new_round(self.game_pointer)
+            # self.round.start_new_round(self.game_pointer)
 
         state = self.get_state(self.game_pointer)
 
@@ -276,15 +212,15 @@ class NolimitholdemGame(Game):
         Returns:
             (dict): The state of the player
         """
-        self.dealer.pot = np.sum([player.in_chips for player in self.players])
+        self.pot = int(np.sum([player.in_chips for player in self.players]))
 
         chips = [self.players[i].in_chips for i in range(self.num_players)]
         legal_actions = self.get_legal_actions()
         state = self.players[player_id].get_state(self.public_cards, chips, legal_actions)
-        state['stakes'] = [self.players[i].remained_chips for i in range(self.num_players)]
+        state['stacks'] = [self.players[i].remained_chips for i in range(self.num_players)]
         state['current_player'] = self.game_pointer
-        state['pot'] = self.dealer.pot
-        state['stage'] = self.stage
+        state['pot'] = self.pot
+        state['street'] = self.street
         return state
 
     def step_back(self):
@@ -296,7 +232,7 @@ class NolimitholdemGame(Game):
         """
         if len(self.history) > 0:
             self.round, self.game_pointer, self.round_counter, self.dealer, self.public_cards, self.players = self.history.pop()
-            self.stage = Stage(self.round_counter)
+            self.street = Street(self.round_counter)
             return True
         return False
 
@@ -328,23 +264,24 @@ class NolimitholdemGame(Game):
             (str): The state of the object as a JSON string
         """
         state = {
-            "Stage": str(self.stage),
-            "Action on": str(self.game_pointer),
+            "Street": self.street.name,
+            "Action on": self.game_pointer,
             "Round Counter": str(self.round_counter),
             "Public Cards": str(self.public_cards),
-            "Players": []
+            "Players": [],
+            "Pot": self.pot
         }
         for player in self.players:
             if live_players_only and player.status != PlayerStatus.ALIVE:
                 continue
             player_state = {
-                "position": Position.from_value(player.player_id),
-                "hand": str(player.hand),
+                "position": str(Position.positions(self.num_players)[player.player_id]),
                 "status": str(player.status),
-                "chips": str(player.chips)
+                "chips": str(player.remained_chips)
             }
             if player.position == self.hero_position:
                 player_state["isHero"] = True
+                player_state["hand"] = Card.hand_as_string(player.hand)
             state["Players"].append(player_state)
         
         print(json.dumps(state))

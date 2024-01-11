@@ -1,7 +1,7 @@
 import unittest
 
 from rlcard_fork.games.limitholdem.player import PlayerStatus
-from rlcard_fork.games.nolimitholdem.game import NolimitholdemGame as Game, Stage
+from rlcard_fork.games.nolimitholdem.game import NolimitholdemGame as Game, Street
 import numpy as np
 from rlcard_fork.utils import seeding
 
@@ -54,55 +54,55 @@ class TestNolimitholdemMethods(unittest.TestCase):
 
         # test check
         game.init_game()
-        self.assertEqual(Stage.PREFLOP, game.stage)
+        self.assertEqual(Street.PREFLOP, game.stage)
         game.step(Action.CHECK_CALL)
         game.step(Action.RAISE_POT)
         game.step(Action.CHECK_CALL)
 
-        self.assertEqual(Stage.FLOP, game.stage)
+        self.assertEqual(Street.FLOP, game.stage)
         game.step(Action.CHECK_CALL)
         game.step(Action.CHECK_CALL)
 
-        self.assertEqual(Stage.TURN, game.stage)
+        self.assertEqual(Street.TURN, game.stage)
         game.step(Action.CHECK_CALL)
         game.step(Action.CHECK_CALL)
 
-        self.assertEqual(Stage.RIVER, game.stage)
+        self.assertEqual(Street.RIVER, game.stage)
 
     def test_step_3_players(self):
         game = Game(num_players=3)
 
         # test check
         _, first_player_id = game.init_game()
-        self.assertEqual(Stage.PREFLOP, game.stage)
+        self.assertEqual(Street.PREFLOP, game.stage)
         game.step(Action.CHECK_CALL)
         game.step(Action.CHECK_CALL)
         game.step(Action.RAISE_POT)
         game.step(Action.FOLD)
         game.step(Action.CHECK_CALL)
 
-        self.assertEqual(Stage.FLOP, game.stage)
+        self.assertEqual(Street.FLOP, game.stage)
         self.assertEqual((first_player_id - 2) % 3, game.round.game_pointer)
         game.step(Action.CHECK_CALL)
         game.step(Action.RAISE_POT)
         game.step(Action.CHECK_CALL)
 
-        self.assertEqual(Stage.TURN, game.stage)
+        self.assertEqual(Street.TURN, game.stage)
         self.assertEqual((first_player_id - 2) % 3, game.round.game_pointer)
         game.step(Action.CHECK_CALL)
         game.step(Action.CHECK_CALL)
 
-        self.assertEqual(Stage.RIVER, game.stage)
+        self.assertEqual(Street.RIVER, game.stage)
 
     def test_auto_step(self):
         game = Game()
 
         game.init_game()
-        self.assertEqual(Stage.PREFLOP, game.stage)
+        self.assertEqual(Street.PREFLOP, game.stage)
         game.step(Action.ALL_IN)
         game.step(Action.CHECK_CALL)
 
-        self.assertEqual(Stage.RIVER, game.stage)
+        self.assertEqual(Street.RIVER, game.stage)
 
     def test_all_in(self):
         game = Game()

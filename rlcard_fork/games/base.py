@@ -1,3 +1,5 @@
+from typing import List
+
 ''' Game-related base classes
 '''
 class Card:
@@ -10,7 +12,7 @@ class Card:
     '''
     suit = None
     rank = None
-    valid_suit = ['S', 'H', 'D', 'C', 'BJ', 'RJ']
+    valid_suit = ['s', 'h', 'd', 'c']
     valid_rank = ['A', '2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K']
 
     def __init__(self, rank, suit):
@@ -42,6 +44,11 @@ class Card:
             string: the combination of rank and suit of a card. Eg: AS, 5H, JD, 3C, ...
         '''
         return self.rank + self.suit
+    
+    @staticmethod
+    def hand_as_string(hand: List):
+        return ''.join([str(card) for card in hand])
+
 
     def get_index(self):
         ''' Get index of a card.
